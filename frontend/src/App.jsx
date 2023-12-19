@@ -8,6 +8,7 @@ import IconSection from "./components/hero/IconSection";
 import Main from "./components/main/Main";
 import Footer from "./components/footer/Footer";
 import ScrollToTop from "./components/scroll/ScrollToTop";
+import { motion } from "framer-motion";
 function App() {
   const [theme, colorMode] = useMode();
 

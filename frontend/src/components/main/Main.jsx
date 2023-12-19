@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  CircularProgress,
   Container,
   Dialog,
   IconButton,
@@ -19,10 +20,13 @@ import { useTheme } from "@emotion/react";
 import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutlined";
 import { Close } from "@mui/icons-material";
 import ProductDetails from "./ProductDetails";
+import { AnimatePresence, motion } from "framer-motion";
 import { useGetproductByNameQuery } from "../../Redux/product";
 const Main = () => {
   const handleAlignment = (event, newValue) => {
-    setmyData(newValue);
+    if (newValue !== null) {
+      setmyData(newValue);
+    }
   };
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
@@ -40,15 +44,30 @@ const Main = () => {
   const [myData, setmyData] = React.useState(allProductAPI);
 
   const { data, error, isLoading } = useGetproductByNameQuery(myData);
+  const [clickedProduct, setclickedProduct] = useState({});
   if (data) {
     console.log(data.data);
   }
   if (isLoading) {
-    return <Typography variant="h6">LOADING...............</Typography>;
+    return (
+      <Box sx={{ py: 11, textAlign: "center", width: "100%" }}>
+        <CircularProgress />
+      </Box>
+    );
   }
   if (error) {
     // @ts-ignore
-    return <Typography variant="h6">{error.message}</Typography>;
+    return (
+      <Container className="border" sx={{ py: 11, textAlign: "center" }}>
+        <Typography variant="h6">
+          {
+            // @ts-ignore
+            error.error
+          }
+        </Typography>
+        <Typography variant="h6">Please try again later</Typography>
+      </Container>
+    );
   }
 
   if (data) {
@@ -122,68 +141,79 @@ const Main = () => {
           flexWrap={"wrap"}
           justifyContent={"space-between"}
         >
-          {data.data.map((item) => {
-            return (
-              <Card
-                key={item}
-                sx={{
-                  ":hover .MuiCardMedia-root": {
-                    scale: "1.1",
-                    transition: "0.35s",
-                    rotate: "1deg",
-                  },
-                  borderRadius: "16px",
-                  maxWidth: 333,
-                  mt: 6,
-                }}
-              >
-                <CardMedia
-                  sx={{ height: 277 }}
-                  // @ts-ignore
-                  image={`${item.attributes.productimg.data[0].attributes.url}`}
-                  title="green iguana"
-                />
-                <CardContent>
-                  <Stack
-                    direction={"row"}
-                    justifyContent={"space-between"}
-                    alignItems={"center"}
-                  >
-                    <Typography gutterBottom variant="h6" component="div">
-                      {item.attributes.productTitle}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {item.attributes.productPrice} <span color="red">DH</span>
-                    </Typography>
-                  </Stack>
-
-                  <Typography gutterBottom variant="body1" component="div">
-                    {item.attributes.productDescription}
-                  </Typography>
-                </CardContent>
-                <CardActions sx={{ justifyContent: "space-between" }}>
-                  <Button
-                    sx={{ textTransform: "capitalize" }}
-                    size="large"
-                    onClick={handleClickOpen}
-                  >
-                    <AddShoppingCartOutlinedIcon
-                      sx={{ mr: 1 }}
-                      fontSize="small"
-                    />
-                    Add To Cart
-                  </Button>
-
-                  <Rating
-                    precision={0.5}
-                    name="read-only"
-                    value={item.attributes.productRating}
-                    readOnly
+          <AnimatePresence>
+            {data.data.map((item) => {
+              return (
+                <Card
+                  component={motion.section}
+                  layout
+                  initial={{ transform: "scale(0)" }}
+                  animate={{ transform: "scale(1)" }}
+                  transition={{duration:1.6,type: "spring",
+                  stiffness: 500}}
+                  key={item}
+                  sx={{
+                    ":hover .MuiCardMedia-root": {
+                      scale: "1.1",
+                      transition: "0.35s",
+                      rotate: "1deg",
+                    },
+                    borderRadius: "16px",
+                    maxWidth: 333,
+                    mt: 6,
+                  }}
+                >
+                  <CardMedia
+                    sx={{ height: 277 }}
+                    // @ts-ignore
+                    image={`${item.attributes.productimg.data[0].attributes.url}`}
+                    title="green iguana"
                   />
-                </CardActions>
-              </Card>
-            );
-          })}
+                  <CardContent>
+                    <Stack
+                      direction={"row"}
+                      justifyContent={"space-between"}
+                      alignItems={"center"}
+                    >
+                      <Typography gutterBottom variant="h6" component="div">
+                        {item.attributes.productTitle}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {item.attributes.productPrice} <span color="red">DH</span>
+                      </Typography>
+                    </Stack>
+            
+                    <Typography gutterBottom variant="body1" component="div">
+                      {item.attributes.productDescription}
+                    </Typography>
+                  </CardContent>
+                  <CardActions sx={{ justifyContent: "space-between" }}>
+                    <Button
+                      sx={{ textTransform: "capitalize" }}
+                      size="large"
+                      onClick={() => {
+                        handleClickOpen();
+                        setclickedProduct(item);
+                      }}
+                    >
+                      <AddShoppingCartOutlinedIcon
+                        sx={{ mr: 1 }}
+                        fontSize="small"
+                      />
+                      Add To Cart
+                    </Button>
+            
+                    <Rating
+                      precision={0.5}
+                      name="read-only"
+                      value={item.attributes.productRating}
+                      readOnly
+                    />
+                  </CardActions>
+                </Card>
+              );
+            })}
+          </AnimatePresence>
         </Stack>
         <Dialog
           sx={{
@@ -205,7 +235,7 @@ const Main = () => {
           >
             <Close />
           </IconButton>
-          <ProductDetails />
+          <ProductDetails clickedProduct={clickedProduct} />
         </Dialog>
       </Container>
     );
